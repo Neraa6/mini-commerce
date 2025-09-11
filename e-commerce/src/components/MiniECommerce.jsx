@@ -1,124 +1,86 @@
-import React, { useReducer, useMemo } from "react";
-import "./MiniECommerce.css"; // styling biasa
-
-// useFetchAdvanced hook
-function useFetchAdvanced(url) {
-  const [data, setData] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    fetch(url)
-      .then((res) => res.json())
-      .then((res) => {
-        setData(res);
-        setLoading(false);
-      });
-  }, [url]);
-
-  return { data, loading };
-}
-
-// usePrevious hook
-function usePrevious(value) {
-  const ref = React.useRef();
-  React.useEffect(() => {
-    ref.current = value;
-  }, [value]);
-  return ref.current;
-}
-
-// Reducer keranjang
-function cartReducer(state, action) {
-  switch (action.type) {
-    case "ADD":
-      return [...state, action.product];
-    case "REMOVE":
-      return state.filter((_, i) => i !== action.index);
-    default:
-      return state;
-  }
-}
-
-// useOptimistic (dummy)
-function useOptimistic(state, reducer) {
-  const [optimistic, dispatch] = useReducer(reducer, state);
-  return [optimistic, dispatch];
-}
+// src/components/MiniECommerce.jsx
+import { useState, useEffect } from "react";
 
 export default function MiniECommerce() {
-  const { data: products, loading } = useFetchAdvanced(
-    "https://fakestoreapi.com/products?limit=18"
-  );
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-  const [cart, dispatch] = useOptimistic([], cartReducer);
+  useEffect(() => {
+    fetch("https://fakestoreapi.com/products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+        const uniqueCategories = [...new Set(data.map((p) => p.category))];
+        setCategories(uniqueCategories);
+      });
+  }, []);
 
-  const total = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.price, 0).toFixed(2);
-  }, [cart]);
-
-  const prevCart = usePrevious(cart);
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+  };
 
   return (
-    <div className="container">
-      <h1 className="title">🛒 Mini E-Commerce</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-8 py-4 bg-white shadow">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          MiniECommerce
+        </h1>
+        <div className="text-gray-700 font-medium">
+          Cart: <span className="text-indigo-600">{cart.length}</span>
+        </div>
+      </nav>
 
-      {loading ? (
-        <p>Loading products...</p>
-      ) : (
-        <div>
-          <h2 className="subtitle">Products</h2>
-          <div className="grid">
-            {products.map((p) => (
-              <div key={p.id} className="card">
-                <img src={p.image} alt={p.title} />
-                <h3>{p.title}</h3>
-                <p>${p.price}</p>
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-1/5 bg-white p-6 shadow-sm hidden md:block">
+          <h2 className="text-lg font-semibold mb-4">Categories</h2>
+          <ul className="space-y-2">
+            {categories.map((cat, i) => (
+              <li
+                key={i}
+                className="text-gray-600 hover:text-indigo-600 cursor-pointer capitalize"
+              >
+                {cat}
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        {/* Products */}
+        <main className="flex-1 p-6">
+          <h2 className="text-xl font-semibold mb-6">Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="bg-white rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col"
+              >
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="h-48 w-full object-contain mb-4"
+                />
+                <h3 className="font-medium text-gray-800 line-clamp-2">
+                  {product.title}
+                </h3>
+                <p className="text-sm text-gray-500 capitalize mb-2">
+                  {product.category}
+                </p>
+                <p className="font-semibold text-indigo-600 mb-4">
+                  Rp {product.price}
+                </p>
                 <button
-                  className="btn add"
-                  onClick={() => dispatch({ type: "ADD", product: p })}
+                  onClick={() => addToCart(product)}
+                  className="mt-auto bg-indigo-600 text-white rounded-xl py-2 px-4 hover:bg-indigo-700 transition"
                 >
                   Add to Cart
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      <div className="cart">
-        <h2 className="subtitle">Cart</h2>
-        {cart.length === 0 ? (
-          <p>Cart is empty</p>
-        ) : (
-          <ul>
-            {cart.map((c, i) => (
-              <li key={i} className="cart-item">
-                <span>
-                  {c.title} - ${c.price}
-                </span>
-                <button
-                  className="btn remove"
-                  onClick={() => dispatch({ type: "REMOVE", index: i })}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="total">Total: ${total}</p>
-      </div>
-
-      <div className="transaction">
-        <h2 className="subtitle">Last Transaction</h2>
-        {prevCart ? (
-          <p>
-            {prevCart.length} items ($
-            {prevCart.reduce((s, i) => s + i.price, 0).toFixed(2)})
-          </p>
-        ) : (
-          <p>No previous transaction</p>
-        )}
+        </main>
       </div>
     </div>
   );

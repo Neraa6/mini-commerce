@@ -1,9 +1,8 @@
-import React from "react";
 import MiniECommerce from "./components/MiniECommerce";
 
 export default function App() {
   return (
-    <div>
+    <div className="min-h-screen">
       <MiniECommerce />
     </div>
   );
