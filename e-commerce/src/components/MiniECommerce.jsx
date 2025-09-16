@@ -1,4 +1,4 @@
-// src/components/MiniECommerce.jsx
+
 import { useState, useEffect } from "react";
 
 export default function MiniECommerce() {
@@ -51,7 +51,7 @@ export default function MiniECommerce() {
         {/* Products */}
         <main className="flex-1 p-6">
           <h2 className="text-xl font-semibold mb-6">Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
               <div
                 key={product.id}
